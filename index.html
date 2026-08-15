@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Filebase Library — Arcada Clinical Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F6F4; --surface:#FFFFFF; --surface-2:#FAFCFB;
+  --ink:#0E1F1B; --ink-2:#44564F; --ink-3:#7C8B84;
+  --pine:#0B322C; --pine-2:#123F37; --pine-3:#1B5348;
+  --teal:#0E7364; --teal-deep:#0A5A4E; --teal-soft:#E0F0EB;
+  --amber:#D98E2B; --amber-soft:#FBEEDC;
+  --coral:#DE5F3C; --coral-soft:#FBE6DE;
+  --blue:#3A6EA5; --blue-soft:#E7EFF8;
+  --olive:#8A7A2C; --olive-soft:#F1EFDF;
+  --line:#E2E9E5; --line-2:#D3DDD7;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(14,31,27,.05),0 14px 34px -18px rgba(14,31,27,.22);
+  --shadow-lg:0 2px 4px rgba(14,31,27,.06),0 24px 48px -20px rgba(14,31,27,.28);
+  --fd:'Bricolage Grotesque',system-ui,sans-serif;
+  --fb:'IBM Plex Sans',system-ui,sans-serif;
+  --fm:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--fb); color:var(--ink); background:var(--bg);
+  background-image:radial-gradient(rgba(14,31,27,.055) 1px, transparent 1px);
+  background-size:26px 26px;
+  font-size:14.5px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#C4D1CA;border-radius:8px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:6px}
+
+/* ---------- APP SHELL ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:266px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;
+  background:linear-gradient(178deg,#0C352E 0%,#0A2A24 60%,#08231E 100%);
+  color:#C9DCD5;display:flex;flex-direction:column;z-index:60;
+}
+.sidebar::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+.sidebar > *{position:relative;z-index:2}
+.brand{display:flex;gap:12px;align-items:center;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-mark{
+  width:40px;height:40px;border-radius:11px;flex-shrink:0;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(135deg,var(--teal) 0%,#0F8A6E 100%);
+  box-shadow:0 6px 16px -6px rgba(15,138,110,.7);
+}
+.brand-name{font-family:var(--fd);font-weight:700;font-size:16px;color:#fff;letter-spacing:.2px;line-height:1.15}
+.brand-sub{font-family:var(--fm);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7FA396;margin-top:2px}
+.nav{padding:16px 12px;flex:1}
+.nav-label{font-family:var(--fm);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#5F7E74;padding:14px 12px 8px}
+.nav-item{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:9.5px 12px;border-radius:10px;color:#A9C2B9;font-weight:500;font-size:13.5px;
+  position:relative;transition:background .2s,color .2s;
+}
+.nav-item svg{width:17px;height:17px;flex-shrink:0;opacity:.85}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:rgba(20,122,101,.28);color:#fff}
+.nav-item.active::before{
+  content:"";position:absolute;left:0;top:22%;height:56%;width:3px;border-radius:3px;
+  background:linear-gradient(180deg,#39C3A3,var(--teal));
+}
+.nav-item .grow{flex:1}
+.chev{display:grid;place-items:center;width:22px;height:22px;border-radius:6px;color:#7FA396;transition:transform .3s,background .2s}
+.chev:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-group.collapsed .chev{transform:rotate(-90deg)}
+/* ---- Sub-section nav (AI Clinical Assistant inside AI Assistant) ---- */
+.nav-sub{margin:2px 0 4px 21px;border-left:1px solid rgba(255,255,255,.14);padding-left:8px;overflow:hidden;max-height:120px;transition:max-height .35s ease,opacity .3s;opacity:1}
+.nav-group.collapsed .nav-sub{max-height:0;opacity:0;margin:0 0 0 21px}
+.sub-item{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  padding:8px 10px;border-radius:9px;color:#93B0A6;font-size:13px;position:relative;
+  transition:background .2s,color .2s;
+}
+.sub-item svg{width:15px;height:15px;opacity:.85}
+.sub-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.sub-item.active{background:rgba(217,142,43,.16);color:#FFDFB0}
+.sub-item.active::before{
+  content:"";position:absolute;left:-9px;top:28%;height:44%;width:2px;border-radius:2px;background:var(--amber);
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#57D9A3;box-shadow:0 0 0 0 rgba(87,217,163,.5);animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(87,217,163,.45)}70%{box-shadow:0 0 0 7px rgba(87,217,163,0)}100%{box-shadow:0 0 0 0 rgba(87,217,163,0)}}
+.badge-live{font-family:var(--fm);font-size:9px;letter-spacing:.14em;background:rgba(87,217,163,.16);color:#7FE7BC;padding:2px 7px;border-radius:20px;margin-left:auto}
+.side-user{margin:10px 12px 14px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.04);display:flex;gap:10px;align-items:center}
+.avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#D98E2B,#DE5F3C);display:grid;place-items:center;color:#fff;font-family:var(--fd);font-weight:700;font-size:13px;flex-shrink:0}
+.side-user .nm{font-size:12.5px;font-weight:600;color:#EFF6F2}
+.side-user .rl{font-family:var(--fm);font-size:10px;color:#7FA396;margin-top:1px}
+.status-on{margin-left:auto;width:8px;height:8px;border-radius:50%;background:#57D9A3;animation:pulse 2.2s infinite}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  position:sticky;top:0;z-index:40;height:62px;display:flex;align-items:center;gap:14px;
+  padding:0 26px;background:rgba(243,246,244,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.burger{display:none;width:36px;height:36px;border-radius:9px;place-items:center;border:1px solid var(--line-2);background:var(--surface)}
+.crumb{font-family:var(--fm);font-size:11.5px;color:var(--ink-3);letter-spacing:.04em;white-space:nowrap}
+.crumb b{color:var(--ink);font-weight:500}
+.crumb .sep{margin:0 6px;color:var(--line-2)}
+.top-search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line-2);border-radius:10px;padding:7px 12px;width:250px;transition:box-shadow .2s,border-color .2s}
+.top-search:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,115,100,.12)}
+.top-search svg{width:15px;height:15px;color:var(--ink-3);flex-shrink:0}
+.top-search input{border:none;outline:none;background:none;width:100%;font-size:13px}
+.top-search kbd{font-family:var(--fm);font-size:10px;color:var(--ink-3);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px;background:var(--surface-2)}
+.clock{font-family:var(--fm);font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line-2);padding:7px 11px;border-radius:10px;white-space:nowrap}
+.icon-btn{position:relative;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line-2);transition:transform .15s,box-shadow .2s}
+.icon-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.icon-btn svg{width:17px;height:17px;color:var(--ink-2)}
+.icon-btn .ndot{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--coral);border:1.5px solid var(--surface)}
+
+.content{padding:28px 30px 48px;max-width:1320px;width:100%;margin:0 auto;flex:1}
+
+/* ---------- VIEWS ---------- */
+.view{display:none}
+.view.is-active{display:block;animation:viewIn .45s cubic-bezier(.2,.7,.2,1)}
+@keyframes viewIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .65s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:24px}
+.eyebrow{font-family:var(--fm);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--teal);border-radius:2px}
+h1.title{font-family:var(--fd);font-weight:800;font-size:clamp(26px,3.2vw,38px);letter-spacing:-.02em;line-height:1.06;color:var(--ink)}
+.page-sub{color:var(--ink-2);margin-top:8px;max-width:60ch;font-size:14px}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-weight:600;font-size:13.5px;transition:transform .15s,box-shadow .2s,background .2s;border:1px solid transparent}
+.btn svg{width:15px;height:15px}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--pine);color:#fff;box-shadow:0 8px 18px -8px rgba(11,50,44,.5)}
+.btn-primary:hover{background:var(--pine-3);transform:translateY(-1px)}
+.btn-teal{background:var(--teal);color:#fff;box-shadow:0 8px 18px -8px rgba(14,115,100,.55)}
+.btn-teal:hover{background:var(--teal-deep);transform:translateY(-1px)}
+.btn-ghost{background:var(--surface);border-color:var(--line-2);color:var(--ink-2)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal);transform:translateY(-1px)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.card-h h3{font-family:var(--fd);font-weight:700;font-size:15.5px}
+.card-tag{font-family:var(--fm);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+
+/* ECG */
+.ecg-card{padding:14px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;overflow:hidden}
+.ecg-wrap{flex:1;min-width:220px;height:56px;position:relative}
+.ecg-wrap svg{width:100%;height:100%}
+.ecg-base{fill:none;stroke:rgba(14,115,100,.16);stroke-width:1.6}
+.ecg-live{fill:none;stroke:var(--teal);stroke-width:2;stroke-linecap:round;stroke-dasharray:70 930;animation:ecgRun 3.2s linear infinite;filter:drop-shadow(0 0 5px rgba(14,115,100,.55))}
+@keyframes ecgRun{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}}
+.ecg-stats{display:flex;gap:22px;align-items:center}
+.ecg-bpm{font-family:var(--fd);font-weight:800;font-size:30px;color:var(--pine);line-height:1}
+.ecg-bpm small{font-family:var(--fm);font-size:10px;font-weight:400;color:var(--ink-3);letter-spacing:.12em;display:block;margin-top:3px}
+.ecg-meta{font-family:var(--fm);font-size:11px;color:var(--ink-3);line-height:1.8}
+.ecg-meta b{color:var(--teal);font-weight:500}
+
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:22px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:transform .2s,box-shadow .25s}
+.stat:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.stat::after{content:"";position:absolute;left:0;top:0;height:100%;width:3px;background:var(--ac,var(--teal))}
+.stat .lb{font-family:var(--fm);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.stat .num{font-family:var(--fd);font-weight:800;font-size:32px;letter-spacing:-.02em;margin:6px 0 4px;color:var(--ink)}
+.stat .dl{font-family:var(--fm);font-size:11px;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:20px}
+.dl.up{background:var(--teal-soft);color:var(--teal-deep)}
+.dl.warn{background:var(--amber-soft);color:#9A6114}
+.dl.hot{background:var(--coral-soft);color:#B03E1E}
+
+.dash-grid{display:grid;grid-template-columns:1.62fr 1fr;gap:18px;align-items:start}
+.col-stack{display:flex;flex-direction:column;gap:18px}
+
+/* Table */
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th{font-family:var(--fm);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+td{padding:12px 16px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+tbody tr{transition:background .15s;cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:none}
+.tname{font-weight:600;display:flex;align-items:center;gap:9px}
+.tname svg{width:15px;height:15px;color:var(--ink-3);flex-shrink:0}
+.chip{display:inline-flex;align-items:center;font-family:var(--fm);font-size:10.5px;letter-spacing:.06em;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.c-lab{background:var(--teal-soft);color:var(--teal-deep)}
+.c-imaging{background:var(--coral-soft);color:#B03E1E}
+.c-note{background:var(--blue-soft);color:#2A5480}
+.c-consent{background:var(--olive-soft);color:#6B5F1F}
+.c-protocol{background:var(--amber-soft);color:#9A6114}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500}
+.st::before{content:"";width:7px;height:7px;border-radius:50%}
+.st.v::before{background:#2FA87C}.st.v{color:#1D7A57}
+.st.r::before{background:var(--amber)}.st.r{color:#9A6114}
+.st.d::before{background:#9AA7A0}.st.d{color:var(--ink-3)}
+.mono{font-family:var(--fm);font-size:12px;color:var(--ink-2)}
+
+/* Activity */
+.feed{padding:6px 20px 14px}
+.feed-item{display:flex;gap:13px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.feed-item:last-child{border-bottom:none}
+.feed-ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex-shrink:0}
+.feed-ico svg{width:15px;height:15px}
+.f-teal{background:var(--teal-soft);color:var(--teal-deep)}
+.f-amber{background:var(--amber-soft);color:#9A6114}
+.f-coral{background:var(--coral-soft);color:#B03E1E}
+.feed-t{font-size:13px;line-height:1.45}
+.feed-t b{font-weight:600}
+.feed-time{font-family:var(--fm);font-size:10.5px;color:var(--ink-3);margin-top:2px}
+
+.storage{padding:18px 20px}
+.storage .row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:10px}
+.bar{height:9px;border-radius:6px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),#39C3A3);width:0;transition:width 1.2s cubic-bezier(.2,.7,.2,1)}
+.storage .legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:14px;font-family:var(--fm);font-size:10.5px;color:var(--ink-3)}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.lg::before{content:"";width:8px;height:8px;border-radius:3px;background:var(--lc)}
+
+/* ---------- LIBRARY ---------- */
+.lib-toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.lib-search{flex:1;min-width:230px;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line-2);border-radius:11px;padding:10px 14px;transition:border-color .2s,box-shadow .2s}
+.lib-search:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,115,100,.12)}
+.lib-search svg{width:16px;height:16px;color:var(--ink-3)}
+.lib-search input{border:none;outline:none;flex:1;background:none;font-size:13.5px}
+.fchips{display:flex;gap:8px;flex-wrap:wrap}
+.fchip{padding:8px 14px;border-radius:20px;border:1px solid var(--line-2);background:var(--surface);font-size:12.5px;font-weight:500;color:var(--ink-2);transition:all .2s}
+.fchip:hover{border-color:var(--teal);color:var(--teal)}
+.fchip.active{background:var(--pine);color:#fff;border-color:var(--pine)}
+select.sort{background:var(--surface);border:1px solid var(--line-2);border-radius:11px;padding:9px 12px;font-size:13px;color:var(--ink-2);outline:none;cursor:pointer}
+.lib-count{font-family:var(--fm);font-size:11px;color:var(--ink-3);letter-spacing:.08em;margin-bottom:14px}
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:16px}
+.file-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;cursor:pointer;position:relative;overflow:hidden;transition:transform .22s,box-shadow .25s,border-color .2s;box-shadow:var(--shadow)}
+.file-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--line-2)}
+.file-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--fc,var(--teal));opacity:.85}
+.fc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.fc-ico{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--fcs,var(--teal-soft));color:var(--fc,var(--teal))}
+.fc-ico svg{width:19px;height:19px}
+.fc-name{font-family:var(--fd);font-weight:700;font-size:14.5px;line-height:1.3;margin-bottom:6px}
+.fc-meta{font-family:var(--fm);font-size:11px;color:var(--ink-3);display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fc-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--line);padding-top:11px}
+.fc-owner{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2)}
+.fc-owner .avatar{width:22px;height:22px;font-size:9px;border-radius:6px}
+.empty{padding:60px 20px;text-align:center;color:var(--ink-3);font-size:14px}
+
+/* ---------- AI OVERVIEW ---------- */
+.ai-hero{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:18px}
+.ai-hero-main{background:linear-gradient(140deg,var(--pine) 0%,var(--pine-2) 60%,#155045 100%);color:#EAF3EF;border-radius:var(--radius);padding:30px 32px;position:relative;overflow:hidden;box-shadow:var(--shadow-lg)}
+.ai-hero-main::before{content:"";position:absolute;right:-70px;top:-70px;width:260px;height:260px;border-radius:50%;border:1px dashed rgba(255,255,255,.14)}
+.ai-hero-main::after{content:"";position:absolute;right:-30px;top:-30px;width:180px;height:180px;border-radius:50%;border:1px dashed rgba(255,255,255,.1)}
+.ai-hero-main .eyebrow{color:#7FE7BC}.ai-hero-main .eyebrow::before{background:#7FE7BC}
+.ai-hero-main h1{color:#fff}
+.ai-hero-main p{color:#B9D2C9;margin-top:10px;max-width:52ch;font-size:14px}
+.ai-path{display:inline-flex;align-items:center;gap:8px;font-family:var(--fm);font-size:11px;letter-spacing:.06em;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);padding:6px 12px;border-radius:20px;margin-top:18px;color:#CFE5DC}
+.ai-path b{color:#FFDFB0;font-weight:500}
+.guard-card{padding:22px}
+.guard-card h3{font-family:var(--fd);font-size:15.5px;margin-bottom:12px;display:flex;gap:8px;align-items:center}
+.guard-card h3 svg{width:17px;height:17px;color:var(--teal)}
+.guard-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.guard-list li{display:flex;gap:10px;font-size:13px;color:var(--ink-2);align-items:flex-start}
+.guard-list li::before{content:"";width:6px;height:6px;border-radius:2px;background:var(--teal);margin-top:7px;flex-shrink:0;transform:rotate(45deg)}
+.sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.sub-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px;position:relative;overflow:hidden;transition:transform .22s,box-shadow .25s;box-shadow:var(--shadow)}
+.sub-card.live-card{border-color:rgba(14,115,100,.35)}
+.sub-card.live-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.sub-card .wm{position:absolute;right:-14px;bottom:-20px;opacity:.06;width:130px;height:130px}
+.sc-head{display:flex;align-items:center;gap:13px;margin-bottom:14px}
+.sc-ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--teal-soft);color:var(--teal-deep)}
+.sc-ico svg{width:22px;height:22px}
+.sc-head h3{font-family:var(--fd);font-size:17.5px;font-weight:700}
+.sc-head .pathline{font-family:var(--fm);font-size:10.5px;color:var(--ink-3);letter-spacing:.06em;margin-top:2px}
+.sc-head .pathline b{color:var(--teal);font-weight:500}
+.sub-card p{font-size:13.5px;color:var(--ink-2);margin-bottom:16px}
+.feat-list{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.feat-list li{display:flex;gap:9px;font-size:13px;color:var(--ink-2)}
+.feat-list svg{width:14px;height:14px;color:var(--teal);flex-shrink:0;margin-top:2.5px}
+.locked-card{border-style:dashed;border-width:1.5px;background:transparent;box-shadow:none;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;color:var(--ink-3)}
+.locked-card .sc-ico{background:var(--surface-2);color:var(--ink-3);border:1px dashed var(--line-2)}
+.locked-card .soon{font-family:var(--fm);font-size:10px;letter-spacing:.16em;border:1px dashed var(--line-2);padding:4px 10px;border-radius:20px;margin-top:auto}
+
+/* ---------- CHAT / AI CLINICAL ASSISTANT ---------- */
+.chat-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--fm);font-size:11px;letter-spacing:.06em;background:var(--amber-soft);color:#9A6114;border:1px solid rgba(217,142,43,.35);padding:5px 12px;border-radius:20px;margin-bottom:12px}
+.chat-badge svg{width:12px;height:12px}
+.chat-status{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-family:var(--fm);font-size:11px;color:var(--ink-3)}
+.chat-status span{display:inline-flex;align-items:center;gap:6px}
+.chat-status .okdot{width:7px;height:7px;border-radius:50%;background:#2FA87C;animation:pulse 2.2s infinite}
+.chat-shell{display:flex;flex-direction:column;height:min(72vh,760px);min-height:460px;overflow:hidden;margin-top:22px}
+.chat-msgs{flex:1;overflow-y:auto;padding:24px 26px;display:flex;flex-direction:column;gap:20px;background:var(--surface-2)}
+.msg{display:flex;gap:11px;max-width:82%;animation:msgIn .35s cubic-bezier(.2,.7,.2,1)}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.msg.ai{align-self:flex-start}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg .ava{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;margin-top:2px}
+.msg.ai .ava{background:var(--teal-soft);color:var(--teal-deep)}
+.msg.ai .ava svg{width:16px;height:16px}
+.msg .col{display:flex;flex-direction:column;gap:5px;min-width:0}
+.msg.user .col{align-items:flex-end}
+.bubble{padding:13px 16px;border-radius:14px;font-size:13.8px;line-height:1.6;box-shadow:var(--shadow)}
+.msg.ai .bubble{background:var(--surface);border:1px solid var(--line);border-top-left-radius:4px}
+.msg.user .bubble{background:var(--pine);color:#EFF6F2;border-top-right-radius:4px}
+.bubble .btitle{font-family:var(--fd);font-weight:700;font-size:13.5px;margin-bottom:7px;color:var(--teal-deep)}
+.bubble ul{margin:6px 0 0 2px;list-style:none;display:flex;flex-direction:column;gap:6px}
+.bubble ul li{position:relative;padding-left:15px}
+.bubble ul li::before{content:"";position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:2px;background:var(--teal);transform:rotate(45deg)}
+.bubble .warnline{margin-top:9px;padding:8px 11px;border-radius:8px;background:var(--amber-soft);color:#8A5610;font-size:12.5px;display:flex;gap:8px;align-items:flex-start}
+.cite{display:inline-flex;align-items:center;gap:6px;margin-top:10px;margin-right:6px;font-family:var(--fm);font-size:11px;background:var(--teal-soft);color:var(--teal-deep);padding:5px 11px;border-radius:20px;cursor:pointer;border:1px solid transparent;transition:all .2s}
+.cite:hover{border-color:var(--teal);transform:translateY(-1px)}
+.cite svg{width:12px;height:12px}
+.msg .meta{font-family:var(--fm);font-size:10px;color:var(--ink-3);letter-spacing:.04em}
+.ctx-pill{align-self:center;font-family:var(--fm);font-size:11px;background:var(--olive-soft);color:#6B5F1F;border:1px dashed rgba(138,122,44,.4);padding:6px 14px;border-radius:20px}
+.typing-b{display:flex;gap:5px;padding:15px 18px !important}
+.typing-b span{width:7px;height:7px;border-radius:50%;background:var(--ink-3);animation:tp 1.1s infinite}
+.typing-b span:nth-child(2){animation-delay:.18s}.typing-b span:nth-child(3){animation-delay:.36s}
+@keyframes tp{0%,70%,100%{transform:translateY(0);opacity:.4}35%{transform:translateY(-5px);opacity:1}}
+.sugg-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:4px}
+.sugg{border:1px solid var(--line-2);background:var(--surface);border-radius:20px;padding:7px 14px;font-size:12.5px;color:var(--teal-deep);transition:all .2s}
+.sugg:hover{border-color:var(--teal);background:var(--teal-soft);transform:translateY(-1px)}
+.chat-ctx{display:none;align-items:center;gap:9px;padding:9px 18px;border-top:1px dashed var(--line);background:var(--surface);font-size:12.5px;color:var(--ink-2)}
+.chat-ctx.on{display:flex}
+.chat-ctx .ctxfile{display:inline-flex;align-items:center;gap:7px;font-family:var(--fm);font-size:11px;background:var(--teal-soft);color:var(--teal-deep);padding:4px 10px;border-radius:16px}
+.chat-ctx .rm{color:var(--coral);font-weight:700;padding:0 2px}
+.composer{display:flex;gap:12px;align-items:flex-end;padding:16px 20px;border-top:1px solid var(--line);background:var(--surface)}
+.composer textarea{flex:1;resize:none;border:1px solid var(--line-2);border-radius:11px;padding:11px 14px;font-size:13.8px;line-height:1.5;max-height:130px;background:var(--surface-2);outline:none;transition:border-color .2s,box-shadow .2s}
+.composer textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,115,100,.12);background:#fff}
+.send-btn{width:44px;height:44px;border-radius:11px;background:var(--teal);color:#fff;display:grid;place-items:center;flex-shrink:0;transition:all .2s;box-shadow:0 8px 16px -8px rgba(14,115,100,.6)}
+.send-btn:hover{background:var(--teal-deep);transform:translateY(-2px)}
+.send-btn svg{width:17px;height:17px}
+.chat-foot{display:flex;justify-content:space-between;gap:12px;padding:9px 20px;background:var(--surface);border-top:1px solid var(--line);font-family:var(--fm);font-size:10.5px;color:var(--ink-3);flex-wrap:wrap}
+.chat-foot .gd{color:var(--teal-deep)}
+
+/* ---------- DRAWER ---------- */
+.drawer-backdrop{position:fixed;inset:0;background:rgba(10,32,27,.42);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:80}
+.drawer-backdrop.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:430px;max-width:94vw;background:var(--surface);z-index:90;box-shadow:-20px 0 60px rgba(10,32,27,.25);transform:translateX(105%);transition:transform .42s cubic-bezier(.2,.7,.2,1);display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.dr-h{padding:20px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.dr-h h3{font-family:var(--fd);font-size:17px;font-weight:700;line-height:1.3;padding-right:8px}
+.dr-body{flex:1;overflow-y:auto;padding:22px}
+.dr-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.dr-meta div{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 13px}
+.dr-meta .k{font-family:var(--fm);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.dr-meta .v{font-size:13px;font-weight:600;margin-top:3px}
+.dr-preview{border:1px solid var(--line);border-radius:12px;padding:20px;background:linear-gradient(180deg,var(--surface-2),#fff)}
+.sk{height:10px;border-radius:6px;background:var(--line);margin-bottom:11px}
+.sk.t{height:15px;width:70%;background:var(--line-2);margin-bottom:16px}
+.sk.w80{width:82%}.sk.w60{width:63%}.sk.w90{width:91%}
+.dr-sum{margin-top:18px;padding:14px 16px;border-left:3px solid var(--teal);background:var(--teal-soft);border-radius:0 10px 10px 0;font-size:13px;color:var(--pine)}
+.dr-sum b{display:block;font-family:var(--fm);font-size:10px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px;color:var(--teal-deep)}
+.dr-f{padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:10px}
+.dr-f .btn{flex:1;justify-content:center}
+
+/* ---------- TOAST ---------- */
+.toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,80px);background:var(--pine);color:#EFF6F2;padding:12px 20px;border-radius:11px;font-size:13px;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow-lg);z-index:120;opacity:0;transition:all .4s cubic-bezier(.2,.7,.2,1);pointer-events:none;max-width:92vw}
+.toast.on{transform:translate(-50%,0);opacity:1}
+.toast svg{width:15px;height:15px;color:#57D9A3;flex-shrink:0}
+
+.backdrop-side{display:none}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:1120px){
+  .dash-grid,.ai-hero{grid-template-columns:1fr}
+  .sub-grid{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:940px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-102%);transition:transform .4s cubic-bezier(.2,.7,.2,1);box-shadow:20px 0 60px rgba(10,32,27,.3)}
+  .sidebar.open{transform:none}
+  .backdrop-side{display:block;position:fixed;inset:0;background:rgba(10,32,27,.45);z-index:55;opacity:0;pointer-events:none;transition:opacity .3s}
+  .backdrop-side.on{opacity:1;pointer-events:auto}
+  .burger{display:grid}
+  .top-search{width:170px}
+  .top-search kbd{display:none}
+  .clock{display:none}
+}
+@media(max-width:640px){
+  .content{padding:20px 16px 40px}
+  .topbar{padding:0 14px;gap:10px}
+  .top-search{display:none}
+  .stat-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .stat .num{font-size:26px}
+  .msg{max-width:96%}
+  .chat-msgs{padding:16px 14px}
+  .dr-meta{grid-template-columns:1fr}
+  .page-head .btn{width:100%;justify-content:center}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}
+  html{scroll-behavior:auto}
+  .reveal{opacity:1 !important;transform:none !important}
+  .ecg-live{stroke-dasharray:1000;stroke-dashoffset:0}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 12 7 12 9.5 6.5 13 17 15.5 12 21 12"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Filebase Library</div>
+        <div class="brand-sub">Arcada Health Suite</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Workspace</div>
+      <button class="nav-item active" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-view="library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        File Library
+      </button>
+
+      <div class="nav-label">Intelligence</div>
+      <!-- AI Assistant — MAIN SECTION -->
+      <div class="nav-group" id="aiGroup">
+        <button class="nav-item" data-view="ai" id="aiParentBtn" aria-expanded="true" aria-controls="aiSubNav">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.9 4.9L19 9.8l-5.1 1.9L12 17l-1.9-5.3L5 9.8l5.1-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+          <span class="grow">AI Assistant</span>
+          <span class="chev" id="aiChev" role="button" tabindex="0" aria-label="Toggle AI Assistant subsections">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <!-- SUBSECTION: AI Clinical Assistant (nested inside AI Assistant) -->
+        <div class="nav-sub" id="aiSubNav">
+          <button class="sub-item" data-view="clinical">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v5a5 5 0 0 0 10 0V3"/><path d="M10 13v2.5a4.5 4.5 0 0 0 9 0V14"/><circle cx="19" cy="11.5" r="2.4"/></svg>
+            AI Clinical Assistant
+            <span class="badge-live"><span class="live-dot" style="display:inline-block;vertical-align:1px;margin-right:4px"></span>LIVE</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-label">System</div>
+      <button class="nav-item" data-toast="Settings are managed by your workspace administrator.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg>
+        Settings
+      </button>
+      <button class="nav-item" data-toast="Documentation portal — demo build.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M9.2 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.6 2.4-2.6 4"/><circle cx="12" cy="17.5" r=".4" fill="currentColor"/></svg>
+        Help &amp; Docs
+      </button>
+    </nav>
+
+    <div class="side-user">
+      <div class="avatar">AO</div>
+      <div>
+        <div class="nm">Dr. Amara Osei</div>
+        <div class="rl">CLINICAL INFORMATICS</div>
+      </div>
+      <span class="status-on" title="Online"></span>
+    </div>
+  </aside>
+
+  <div class="backdrop-side" id="sideBackdrop"></div>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <header class="topbar">
+      <button class="burger" id="burger" aria-label="Open menu">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="crumb"><span id="crumbA">Workspace</span><span class="sep">/</span><b id="crumbB">Dashboard</b></div>
+      <div class="top-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input id="globalSearch" type="text" placeholder="Search records…" aria-label="Search records">
+        <kbd>⏎</kbd>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+      <button class="icon-btn" id="bellBtn" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span class="ndot"></span>
+      </button>
+      <div class="avatar" style="width:38px;height:38px;border-radius:10px;font-size:13px">AO</div>
+    </header>
+
+    <main class="content">
+
+      <!-- ========== VIEW: DASHBOARD ========== -->
+      <section class="view is-active" data-view="dashboard">
+        <div class="page-head reveal">
+          <div>
+            <div class="eyebrow">Operations Overview</div>
+            <h1 class="title decode" data-text="Clinical Records Dashboard">Clinical Records Dashboard</h1>
+            <p class="page-sub">Live status of the indexed document library, review queues and assistant activity across the Arcada workspace.</p>
+          </div>
+          <button class="btn btn-primary" data-toast="Upload pipeline is disabled in this demo build.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
+            New Upload
+          </button>
+        </div>
+
+        <div class="card ecg-card reveal">
+          <div class="ecg-wrap" aria-hidden="true">
+            <svg viewBox="0 0 600 60" preserveAspectRatio="none">
+              <path class="ecg-base" pathLength="1000" d="M0 34 H88 L97 34 104 16 112 48 120 28 126 34 H226 L235 34 242 12 251 52 259 26 266 34 H392 L400 34 407 18 415 46 423 30 429 34 H600"/>
+              <path class="ecg-live" pathLength="1000" d="M0 34 H88 L97 34 104 16 112 48 120 28 126 34 H226 L235 34 242 12 251 52 259 26 266 34 H392 L400 34 407 18 415 46 423 30 429 34 H600"/>
+            </svg>
+          </div>
+          <div class="ecg-stats">
+            <div class="ecg-bpm"><span id="bpm">72</span><small>BPM · SYNC</small></div>
+            <div class="ecg-meta">INDEXER&nbsp;&nbsp;: <b>ONLINE</b><br>LAST SYNC : <b>14 s ago</b><br>AUDIT&nbsp;&nbsp;&nbsp;&nbsp;: <b>PASSING</b></div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat reveal" style="--ac:#0E7364"><div class="lb">Indexed Files</div><div class="num" data-count="1284">0</div><span class="dl up">▲ +38 this week</span></div>
+          <div class="stat reveal" style="--ac:#3A6EA5"><div class="lb">Storage Used</div><div class="num"><span data-count="68">0</span>%</div><span class="dl up">▲ 412 GB of 600</span></div>
+          <div class="stat reveal" style="--ac:#D98E2B"><div class="lb">AI Queries Today</div><div class="num" data-count="42">0</div><span class="dl warn">◆ 6 flagged for review</span></div>
+          <div class="stat reveal" style="--ac:#DE5F3C"><div class="lb">Pending Reviews</div><div class="num" data-count="7">0</div><span class="dl hot">● 2 critical</span></div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="card reveal">
+            <div class="card-h"><h3>Recent Files</h3><span class="card-tag">Updated live</span></div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Document</th><th>Type</th><th>Status</th><th>Size</th><th>Updated</th></tr></thead>
+                <tbody id="recentBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-stack">
+            <div class="card reveal">
+              <div class="card-h"><h3>Activity</h3><span class="card-tag">Today</span></div>
+              <div class="feed">
+                <div class="feed-item"><div class="feed-ico f-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 16V4M6 10l6-6 6 6"/></svg></div><div><div class="feed-t"><b>Dr. R. Chen</b> uploaded <b>CBC_Panel_Apr.pdf</b> to Lab Reports.</div><div class="feed-time">09:41 · Hematology</div></div></div>
+                <div class="feed-item"><div class="feed-ico f-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg></div><div><div class="feed-t"><b>AI Clinical Assistant</b> answered 12 queries · 2 citations audited.</div><div class="feed-time">11:20 · AI Assistant module</div></div></div>
+                <div class="feed-item"><div class="feed-ico f-coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.8v.2"/><circle cx="12" cy="12" r="9.2"/></svg></div><div><div class="feed-t"><b>Critical K⁺ flag</b> routed via Potassium pathway to on-call.</div><div class="feed-time">12:05 · Escalation</div></div></div>
+                <div class="feed-item"><div class="feed-ico f-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div><div class="feed-t"><b>N. Adeyemi</b> verified <b>Consent_Form_Signed_88.pdf</b>.</div><div class="feed-time">13:47 · Compliance</div></div></div>
+              </div>
+            </div>
+            <div class="card storage reveal">
+              <div class="row"><span style="font-weight:600">Storage allocation</span><span class="mono">412 / 600 GB</span></div>
+              <div class="bar"><i id="storageBar" data-w="68"></i></div>
+              <div class="legend">
+                <span class="lg" style="--lc:#0E7364">Imaging 46%</span>
+                <span class="lg" style="--LC:#3A6EA5">Reports 28%</span>
+                <span class="lg" style="--lc:#D98E2B">Notes 18%</span>
+                <span class="lg" style="--lc:#DE5F3C">Other 8%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== VIEW: FILE LIBRARY ========== -->
+      <section class="view" data-view="library">
+        <div class="page-head reveal">
+          <div>
+            <div class="eyebrow">Workspace / Records</div>
+            <h1 class="title decode" data-text="File Library">File Library</h1>
+            <p class="page-sub">Every document below is indexed for retrieval and can be referenced directly inside the AI Assistant module.</p>
+          </div>
+        </div>
+        <div class="lib-toolbar reveal">
+          <div class="lib-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+            <input id="libSearch" type="text" placeholder="Filter by name, owner or type…" aria-label="Filter files">
+          </div>
+          <div class="fchips" id="fchips">
+            <button class="fchip active" data-type="all">All</button>
+            <button class="fchip" data-type="lab">Lab Reports</button>
+            <button class="fchip" data-type="imaging">Imaging</button>
+            <button class="fchip" data-type="note">Clinical Notes</button>
+            <button class="fchip" data-type="protocol">Protocols</button>
+            <button class="fchip" data-type="consent">Consent</button>
+          </div>
+          <select class="sort" id="sortSel" aria-label="Sort files">
+            <option value="updated">Sort · Newest</option>
+            <option value="name">Sort · Name A–Z</option>
+            <option value="size">Sort · Largest</option>
+          </select>
+        </div>
+        <div class="lib-count" id="libCount"></div>
+        <div class="file-grid" id="fileGrid"></div>
+      </section>
+
+      <!-- ========== VIEW: AI ASSISTANT (MAIN SECTION) ========== -->
+      <section class="view" data-view="ai">
+        <div class="page-head reveal">
+          <div>
+            <div class="eyebrow">Intelligence Layer</div>
+            <h1 class="title decode" data-text="AI Assistant">AI Assistant</h1>
+            <p class="page-sub">The AI Assistant is the parent section for all intelligent tooling in this workspace. Each capability is delivered as a dedicated subsection with its own context, guardrails and audit trail.</p>
+          </div>
+          <div class="ai-path reveal">PATH&nbsp;:&nbsp;Workspace&nbsp;→&nbsp;<b>AI&nbsp;Assistant</b>&nbsp;→&nbsp;Subsections</div>
+        </div>
+
+        <div class="ai-hero">
+          <div class="ai-hero-main reveal">
+            <div class="eyebrow">Section Overview</div>
+            <h1 class="title" style="font-size:clamp(22px,2.6vw,30px)">One assistant. Purpose-built subsections.</h1>
+            <p>Assistants operate strictly on the indexed Filebase Library. Every answer is traceable to a source document, every session is logged, and clinical outputs always carry a decision-support disclaimer.</p>
+            <div class="ai-path">AI&nbsp;Assistant&nbsp;▸&nbsp;<b>AI&nbsp;Clinical&nbsp;Assistant</b>&nbsp;<span style="color:#7FE7BC">●&nbsp;LIVE</span></div>
+          </div>
+          <div class="card guard-card reveal">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg>Safety &amp; Governance</h3>
+            <ul class="guard-list">
+              <li>Read-only access to indexed records — no writes to source files.</li>
+              <li>Full query audit trail retained 7 years per compliance policy.</li>
+              <li>PHI redaction applied on all exported summaries.</li>
+              <li>Clinical outputs are decision support, never a diagnosis.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sub-grid">
+          <!-- The requested subsection card -->
+          <div class="sub-card live-card reveal">
+            <svg class="wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 3v5a5 5 0 0 0 10 0V3"/><path d="M10 13v2.5a4.5 4.5 0 0 0 9 0V14"/><circle cx="19" cy="11.5" r="2.4"/></svg>
+            <div class="sc-head">
+              <div class="sc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v5a5 5 0 0 0 10 0V3"/><path d="M10 13v2.5a4.5 4.5 0 0 0 9 0V14"/><circle cx="19" cy="11.5" r="2.4"/></svg></div>
+              <div>
+                <h3>AI Clinical Assistant</h3>
+                <div class="pathline">Subsection of <b>AI Assistant</b> · MedCore v4</div>
+              </div>
+            </div>
+            <p>Conversational decision support grounded in your indexed library — lab interpretation, protocol lookups, dosing checks and record summaries with inline citations.</p>
+            <ul class="feat-list">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Cited answers mapped to source documents</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Protocol &amp; dosing cross-checks</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>File-level context linking from the Library</li>
+            </ul>
+            <button class="btn btn-teal" data-view="clinical">Open AI Clinical Assistant
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+          <div class="sub-card locked-card reveal">
+            <div class="sc-head">
+              <div class="sc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+              <div>
+                <h3 style="color:var(--ink-2)">Additional Modules</h3>
+                <div class="pathline">Provisioned by administrators</div>
+              </div>
+            </div>
+            <p>Further subsections of the AI Assistant (e.g. research summarisation or coding support) can be enabled per licence tier.</p>
+            <span class="soon">COMING SOON</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== VIEW: AI CLINICAL ASSISTANT (SUBSECTION) ========== -->
+      <section class="view" data-view="clinical">
+        <div class="page-head reveal" style="margin-bottom:0">
+          <div style="flex:1;min-width:260px">
+            <span class="chat-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              AI Assistant&nbsp;/&nbsp;Subsection
+            </span>
+            <h1 class="title decode" data-text="AI Clinical Assistant">AI Clinical Assistant</h1>
+            <div class="chat-status">
+              <span><span class="okdot"></span>Model MedCore v4 · Operational</span>
+              <span>Context: <b style="color:var(--teal-deep)">1,284</b> indexed files</span>
+              <span>Latency ~0.8 s</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost" id="newChatBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            New conversation
+          </button>
+        </div>
+
+        <div class="card chat-shell reveal">
+          <div class="chat-msgs" id="chatMsgs" aria-live="polite"></div>
+
+          <div class="chat-ctx" id="chatCtx">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-3)"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            Linked context:
+            <span class="ctxfile" id="ctxName"></span>
+            <button class="rm" id="ctxRemove" aria-label="Remove linked file">✕</button>
+          </div>
+
+          <div class="composer">
+            <textarea id="chatInput" rows="1" placeholder="Ask about labs, protocols, dosing or summaries…" aria-label="Message the AI Clinical Assistant"></textarea>
+            <button class="send-btn" id="sendBtn" aria-label="Send message">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+            </button>
+          </div>
+          <div class="chat-foot">
+            <span>ENTER send · SHIFT+ENTER newline</span>
+            <span class="gd">⚕ Decision support only — verify with clinical judgment.</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ========== FILE DRAWER ========== -->
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="drawer" id="drawer" aria-label="File details">
+  <div class="dr-h">
+    <div>
+      <span class="chip" id="drType">TYPE</span>
+      <h3 id="drName" style="margin-top:9px">file.pdf</h3>
+    </div>
+    <button class="icon-btn" id="drawerClose" aria-label="Close panel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="dr-body">
+    <div class="dr-meta">
+      <div><div class="k">Status</div><div class="v" id="drStatus">—</div></div>
+      <div><div class="k">Size</div><div class="v" id="drSize">—</div></div>
+      <div><div class="k">Updated</div><div class="v" id="drUpdated">—</div></div>
+      <div><div class="k">Owner</div><div class="v" id="drOwner">—</div></div>
+    </div>
+    <div class="dr-preview">
+      <div class="sk t"></div>
+      <div class="sk w90"></div><div class="sk"></div><div class="sk w80"></div><div class="sk w60"></div>
+      <div class="sk" style="margin-top:18px;width:40%"></div>
+      <div class="sk w90"></div><div class="sk w80"></div>
+    </div>
+    <div class="dr-sum"><b>Indexed Summary</b><span id="drSummary"></span></div>
+  </div>
+  <div class="dr-f">
+    <button class="btn btn-ghost" id="drDownload">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+      Download
+    </button>
+    <button class="btn btn-teal" id="drAskAI">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.9 4.9L19 9.8l-5.1 1.9L12 17l-1.9-5.3L5 9.8l5.1-1.9z"/></svg>
+      Ask AI about this file
+    </button>
+  </div>
+</aside>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+(function(){
+"use strict";
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (s,c)=> (c||document).querySelector(s);
+const $$ = (s,c)=> Array.from((c||document).querySelectorAll(s));
+
+/* ---------------- DATA ---------------- */
+const FILES = [
+ {id:1, name:"CBC_Panel_Apr.pdf", type:"lab", label:"Lab Report", status:"v", statusTxt:"Verified", size:"1.2 MB", sizeN:1.2, updated:"Apr 12, 2025", ts:20250412, owner:"Dr. R. Chen", ini:"RC", sum:"Complete blood count — Hgb 11.2 g/dL (mildly low, stable), WCC and platelets within reference. Flagged for trend review vs Jan panel."},
+ {id:2, name:"Chest_XRay_0441.dcm", type:"imaging", label:"Imaging", status:"r", statusTxt:"In review", size:"18.4 MB", sizeN:18.4, updated:"Apr 11, 2025", ts:20250411, owner:"Dr. L. Marek", ini:"LM", sum:"PA chest radiograph, ward 4. Preliminary read: no acute cardiopulmonary process. Final report pending radiologist sign-off."},
+ {id:3, name:"Metformin_Protocol.pdf", type:"protocol", label:"Protocol", status:"v", statusTxt:"Verified", size:"860 KB", sizeN:0.86, updated:"Mar 30, 2025", ts:20250330, owner:"Pharmacy Board", ini:"PB", sum:"Renal dosing schedule, contrast hold guidance and review intervals for metformin therapy (rev. 2025-03)."},
+ {id:4, name:"Discharge_Note_2210.docx", type:"note", label:"Clinical Note", status:"v", statusTxt:"Verified", size:"212 KB", sizeN:0.21, updated:"Apr 09, 2025", ts:20250409, owner:"Dr. S. Bakshi", ini:"SB", sum:"Discharge summary, 4-day admission for cellulitis. Completed IV course, stepped down to oral; follow-up in 7 days."},
+ {id:5, name:"Potassium_Critical_Flow.pdf", type:"protocol", label:"Protocol", status:"v", statusTxt:"Verified", size:"640 KB", sizeN:0.64, updated:"Feb 18, 2025", ts:20250218, owner:"Acute Care Comm.", ini:"AC", sum:"Escalation pathway for K⁺ ≥6.0 mmol/L: repeat sample rules, ECG requirement, notification and documentation steps."},
+ {id:6, name:"Lipid_Panel_Q3.pdf", type:"lab", label:"Lab Report", status:"v", statusTxt:"Verified", size:"1.1 MB", sizeN:1.1, updated:"Apr 02, 2025", ts:20250402, owner:"Dr. R. Chen", ini:"RC", sum:"LDL 2.9 mmol/L (above diabetic cohort target of 1.8), triglycerides borderline. Therapy review recommended at next visit."},
+ {id:7, name:"MRI_Lumbar_0398.dcm", type:"imaging", label:"Imaging", status:"d", statusTxt:"Draft", size:"96.2 MB", sizeN:96.2, updated:"Apr 07, 2025", ts:20250407, owner:"Dr. L. Marek", ini:"LM", sum:"Lumbar spine series, T1/T2 sagittal. Uploaded for second read — query disc protrusion L4/L5."},
+ {id:8, name:"Intake_Assessment_118.docx", type:"note", label:"Clinical Note", status:"r", statusTxt:"In review", size:"184 KB", sizeN:0.18, updated:"Apr 13, 2025", ts:20250413, owner:"N. Adeyemi", ini:"NA", sum:"New-patient intake: history, medications reconciliation and baseline observations. Awaiting countersignature."},
+ {id:9, name:"Consent_Form_Signed_88.pdf", type:"consent", label:"Consent", status:"v", statusTxt:"Verified", size:"420 KB", sizeN:0.42, updated:"Apr 13, 2025", ts:20250413, owner:"N. Adeyemi", ini:"NA", sum:"Signed procedure consent with capacity assessment attached. Witnessed and countersigned per policy 8.2."},
+ {id:10,name:"HbA1c_Trend_Q1.xlsx", type:"lab", label:"Lab Report", status:"d", statusTxt:"Draft", size:"96 KB", sizeN:0.09, updated:"Mar 22, 2025", ts:20250322, owner:"Dr. S. Bakshi", ini:"SB", sum:"Quarterly HbA1c export for cohort dashboard — latest mean 58 mmol/mol, trending down from 64."}
+];
+const TYPE_META = {
+ lab:{cls:"c-lab", c:"#0E7364", cs:"#E0F0EB", doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v5.5L4.8 18a2 2 0 0 0 1.8 3h10.8a2 2 0 0 0 1.8-3L14 8.5V3"/></svg>'},
+ imaging:{cls:"c-imaging", c:"#DE5F3C", cs:"#FBE6DE", doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 15l-4.5-4.5L7 20"/></svg>'},
+ note:{cls:"c-note", c:"#3A6EA5", cs:"#E7EFF8", doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>'},
+ protocol:{cls:"c-protocol", c:"#D98E2B", cs:"#FBEEDC", doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/><path d="M9.5 12l1.8 1.8 3.4-3.6"/></svg>'},
+ consent:{cls:"c-consent", c:"#8A7A2C", cs:"#F1EFDF", doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'}
+};
+const ST_HTML = {v:'<span class="st v">Verified</span>', r:'<span class="st r">In review</span>', d:'<span class="st d">Draft</span>'};
+
+/* ---------------- TOAST ---------------- */
+let toastT;
+function toast(msg){
+  $('#toastMsg').textContent = msg;
+  const t = $('#toast'); t.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('on'), 2600);
+}
+$$('[data-toast]').forEach(b=>b.addEventListener('click',()=>toast(b.dataset.toast)));
+
+/* ---------------- SIDEBAR (mobile) ---------------- */
+const sidebar = $('#sidebar'), sideBd = $('#sideBackdrop');
+function closeSide(){ sidebar.classList.remove('open'); sideBd.classList.remove('on'); }
+$('#burger').addEventListener('click',()=>{ sidebar.classList.add('open'); sideBd.classList.add('on'); });
+sideBd.addEventListener('click', closeSide);
+
+/* AI Assistant group collapse (chevron only) */
+const aiGroup = $('#aiGroup'), aiChev = $('#aiChev'), aiParent = $('#aiParentBtn');
+function toggleGroup(e){ e.stopPropagation(); aiGroup.classList.toggle('collapsed'); aiParent.setAttribute('aria-expanded', String(!aiGroup.classList.contains('collapsed'))); }
+aiChev.addEventListener('click', toggleGroup);
+aiChev.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleGroup(e);} });
+
+/* ---------------- ROUTER ---------------- */
+const CRUMBS = {
+  dashboard:['Workspace','Dashboard'],
+  library:['Workspace','File Library'],
+  ai:['Intelligence','AI Assistant'],
+  clinical:['AI Assistant','AI Clinical Assistant']
+};
+let currentView = 'dashboard';
+
+function scramble(el){
+  const finalTxt = el.dataset.text || el.textContent;
+  if(REDUCED){ el.textContent = finalTxt; return; }
+  const CH = 'ACGT0147#%&$≡+·';
+  let frame = 0; const total = Math.max(14, finalTxt.length + 6);
+  clearInterval(el._scr);
+  el._scr = setInterval(()=>{
+    frame++;
+    const reveal = Math.floor((frame/total)*finalTxt.length);
+    let out = '';
+    for(let i=0;i<finalTxt.length;i++){
+      const ch = finalTxt[i];
+      out += (i < reveal || ch===' ') ? ch : CH[Math.floor(Math.random()*CH.length)];
+    }
+    el.textContent = out;
+    if(frame>=total){ el.textContent = finalTxt; clearInterval(el._scr); }
+  }, 28);
+}
+
+function playReveals(view){
+  const els = $$('.reveal', view);
+  els.forEach((el,i)=>{
+    el.classList.remove('in'); el.style.transitionDelay='0ms';
+    void el.offsetWidth;
+    requestAnimationFrame(()=>{
+      el.style.transitionDelay = (REDUCED?0:i*70)+'ms';
+      el.classList.add('in');
+    });
+  });
+}
+
+function animateCounts(view){
+  $$('[data-count]', view).forEach(el=>{
+    const target = +el.dataset.count;
+    if(REDUCED){ el.textContent = target.toLocaleString(); return; }
+    const t0 = performance.now(), dur = 900;
+    (function step(t){
+      const p = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-p,3);
+      el.textContent = Math.round(target*e).toLocaleString();
+      if(p<1) requestAnimationFrame(step);
+    })(t0);
+  });
+}
+
+function show(id){
+  const view = document.querySelector('.view[data-view="'+id+'"]');
+  if(!view) return;
+  $$('.view').forEach(v=>v.classList.remove('is-active'));
+  view.classList.add('is-active');
+  currentView = id;
+  $('#crumbA').textContent = CRUMBS[id][0];
+  $('#crumbB').textContent = CRUMBS[id][1];
+
+  /* nav states */
+  $$('.nav-item,.sub-item').forEach(n=>n.classList.remove('active'));
+  const navBtn = document.querySelector('[data-view="'+id+'"].nav-item') || document.querySelector('[data-view="'+id+'"].sub-item');
+  if(navBtn) navBtn.classList.add('active');
+  if(id==='clinical'){ aiGroup.classList.remove('collapsed'); aiParent.setAttribute('aria-expanded','true'); }
+
+  $$('.decode', view).forEach(scramble);
+  playReveals(view);
+  animateCounts(view);
+  if(id==='dashboard'){ setTimeout(()=>{ const b=$('#storageBar'); if(b) b.style.width = b.dataset.w+'%'; }, 200); }
+  if(id==='clinical'){ ensureGreeting(); setTimeout(()=>scrollChat(true),80); }
+  closeSide();
+  window.scrollTo({top:0, behavior: REDUCED?'auto':'smooth'});
+}
+
+document.addEventListener('click', e=>{
+  const nav = e.target.closest('[data-view]');
+  if(nav && (nav.classList.contains('nav-item') || nav.classList.contains('sub-item') || nav.classList.contains('btn'))) show(nav.dataset.view);
+});
+
+/* ---------------- CLOCK + BPM ---------------- */
+function tick(){ const d=new Date(); $('#clock').textContent = d.toLocaleTimeString('en-GB',{hour12:false}); }
+tick(); setInterval(tick,1000);
+if(!REDUCED){ setInterval(()=>{ $('#bpm').textContent = 68 + Math.floor(Math.random()*8); }, 2400); }
+
+/* ---------------- RECENT TABLE ---------------- */
+function renderRecent(){
+  const rows = [...FILES].sort((a,b)=>b.ts-a.ts).slice(0,6);
+  $('#recentBody').innerHTML = rows.map(f=>{
+    const m = TYPE_META[f.type];
+    return '<tr data-open="'+f.id+'">'+
+      '<td><span class="tname">'+m.doc+f.name+'</span></td>'+
+      '<td><span class="chip '+m.cls+'">'+f.label+'</span></td>'+
+      '<td>'+ST_HTML[f.status]+'</td>'+
+      '<td class="mono">'+f.size+'</td>'+
+      '<td class="mono">'+f.updated+'</td></tr>';
+  }).join('');
+  $$('#recentBody tr').forEach(tr=>tr.addEventListener('click',()=>openDrawer(+tr.dataset.open)));
+}
+renderRecent();
+
+/* ---------------- LIBRARY ---------------- */
+const libState = {q:'', type:'all', sort:'updated'};
+function renderLibrary(){
+  let list = FILES.filter(f=>{
+    const okT = libState.type==='all' || f.type===libState.type;
+    const q = libState.q.toLowerCase();
+    const okQ = !q || (f.name+' '+f.owner+' '+f.label).toLowerCase().includes(q);
+    return okT && okQ;
+  });
+  if(libState.sort==='updated') list.sort((a,b)=>b.ts-a.ts);
+  if(libState.sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  if(libState.sort==='size') list.sort((a,b)=>b.sizeN-a.sizeN);
+
+  $('#libCount').textContent = list.length + ' OF ' + FILES.length + ' RECORDS · INDEXED & SEARCHABLE';
+  const grid = $('#fileGrid');
+  if(!list.length){ grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No records match your filters.<br><span class="mono" style="font-size:11px">Try clearing the search or selecting “All”.</span></div>'; return; }
+  grid.innerHTML = list.map((f,i)=>{
+    const m = TYPE_META[f.type];
+    return '<div class="file-card reveal" data-open="'+f.id+'" style="--fc:'+m.c+';--fcs:'+m.cs+'" tabindex="0" role="button">'+
+      '<div class="fc-top"><div class="fc-ico">'+m.doc+'</div><span class="chip '+m.cls+'">'+f.label+'</span></div>'+
+      '<div class="fc-name">'+f.name+'</div>'+
+      '<div class="fc-meta"><span>'+f.size+'</span><span>·</span><span>'+f.updated+'</span></div>'+
+      '<div class="fc-foot">'+ST_HTML[f.status]+'<span class="fc-owner"><span class="avatar">'+f.ini+'</span>'+f.owner+'</span></div>'+
+    '</div>';
+  }).join('');
+  $$('.file-card', grid).forEach((c,i)=>{
+    const open = ()=>openDrawer(+c.dataset.open);
+    c.addEventListener('click', open);
+    c.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();open();} });
+    setTimeout(()=>c.classList.add('in'), REDUCED?0:60*i);
+  });
+}
+renderLibrary();
+$('#libSearch').addEventListener('input', e=>{ libState.q = e.target.value; renderLibrary(); });
+$('#sortSel').addEventListener('change', e=>{ libState.sort = e.target.value; renderLibrary(); });
+$$('#fchips .fchip').forEach(ch=>ch.addEventListener('click',()=>{
+  $$('#fchips .fchip').forEach(x=>x.classList.remove('active'));
+  ch.classList.add('active'); libState.type = ch.dataset.type; renderLibrary();
+}));
+$('#globalSearch').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    libState.q = e.target.value; $('#libSearch').value = e.target.value;
+    show('library'); renderLibrary();
+  }
+});
+$('#bellBtn').addEventListener('click',()=>toast('3 notifications — 2 critical review items pending.'));
+
+/* ---------------- DRAWER ---------------- */
+let drawerFile = null;
+function openDrawer(id){
+  const f = FILES.find(x=>x.id===id); if(!f) return;
+  drawerFile = f;
+  const m = TYPE_META[f.type];
+  $('#drType').className = 'chip '+m.cls; $('#drType').textContent = f.label;
+  $('#drName').textContent = f.name;
+  $('#drStatus').innerHTML = ST_HTML[f.status];
+  $('#drSize').textContent = f.size;
+  $('#drUpdated').textContent = f.updated;
+  $('#drOwner').textContent = f.owner;
+  $('#drSummary').textContent = f.sum;
+  $('#drawer').classList.add('on'); $('#drawerBackdrop').classList.add('on');
+}
+function closeDrawer(){ $('#drawer').classList.remove('on'); $('#drawerBackdrop').classList.remove('on'); }
+$('#drawerClose').addEventListener('click', closeDrawer);
+$('#drawerBackdrop').addEventListener('click', closeDrawer);
+$('#drDownload').addEventListener('click',()=>toast('Preparing secure download — '+ (drawerFile?drawerFile.name:'file') + '…'));
+$('#drAskAI').addEventListener('click',()=>{
+  if(!drawerFile) return;
+  linkContext(drawerFile);
+  closeDrawer(); show('clinical');
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeDrawer(); closeSide(); } });
+
+/* ---------------- CHAT ---------------- */
+const chatMsgs = $('#chatMsgs'), chatInput = $('#chatInput');
+let chatReady = false, ctxFile = null;
+
+function now(){ return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function scrollChat(instant){ chatMsgs.scrollTo({top:chatMsgs.scrollHeight, behavior:(REDUCED||instant)?'auto':'smooth'}); }
+
+const AVA_AI = '<div class="ava"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v5a5 5 0 0 0 10 0V3"/><path d="M10 13v2.5a4.5 4.5 0 0 0 9 0V14"/><circle cx="19" cy="11.5" r="2.4"/></svg></div>';
+
+function addUser(text){
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = '<div class="col"><div class="bubble">'+esc(text)+'</div><div class="meta">You · '+now()+'</div></div>';
+  chatMsgs.appendChild(d); scrollChat();
+}
+function addCtxPill(name){
+  const d = document.createElement('div');
+  d.className = 'ctx-pill'; d.textContent = '📎 Context linked — '+name;
+  chatMsgs.appendChild(d); scrollChat();
+}
+function addAIStream(html, plain, cites){
+  const d = document.createElement('div');
+  d.className = 'msg ai';
+  d.innerHTML = AVA_AI + '<div class="col"><div class="bubble"><span class="stream"></span><span class="cites" style="display:none"></span></div><div class="meta">AI Clinical Assistant · '+now()+'</div></div>';
+  chatMsgs.appendChild(d);
+  const streamEl = d.querySelector('.stream'), citeEl = d.querySelector('.cites');
+  const finish = ()=>{
+    streamEl.innerHTML = html;
+    if(cites && cites.length){
+      citeEl.innerHTML = cites.map(c=>'<span class="cite" data-file="'+c+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>'+c+'</span>').join('');
+      citeEl.style.display = 'block';
+      $$('.cite', citeEl).forEach(ct=>ct.addEventListener('click',()=>{
+        const f = FILES.find(x=>x.name===ct.dataset.file);
+        if(f) openDrawer(f.id);
+      }));
+    }
+    scrollChat();
+  };
+  if(REDUCED){ finish(); return; }
+  let i = 0;
+  const iv = setInterval(()=>{
+    i += 3;
+    streamEl.textContent = plain.slice(0,i);
+    scrollChat();
+    if(i >= plain.length){ clearInterval(iv); finish(); }
+  }, 14);
+}
+function showTyping(){
+  const d = document.createElement('div');
+  d.className = 'msg ai'; d.id = 'typingMsg';
+  d.innerHTML = AVA_AI + '<div class="col"><div class="bubble typing-b"><span></span><span></span><span></span></div></div>';
+  chatMsgs.appendChild(d); scrollChat();
+}
+function hideTyping(){ const t = $('#typingMsg'); if(t) t.remove(); }
+
+const SUGGESTIONS = ['Summarise the latest labs for patient #4821','Check metformin renal dosing','Walk me through the potassium critical pathway'];
+function addWelcome(){
+  const d = document.createElement('div');
+  d.className = 'msg ai';
+  d.innerHTML = AVA_AI + '<div class="col"><div class="bubble"><span class="btitle">AI Clinical Assistant — ready</span>'+
+   'Good day, Dr. Osei. As a subsection of the <b>AI Assistant</b> module, I can query the indexed Filebase Library, summarise records and cross-check protocols — always with citations.<div class="sugg-row" style="margin-top:12px">'+
+   SUGGESTIONS.map(s=>'<button class="sugg">'+s+'</button>').join('')+'</div></div>'+
+   '<div class="meta">AI Clinical Assistant · '+now()+'</div></div>';
+  chatMsgs.appendChild(d);
+  $$('.sugg', d).forEach(b=>b.addEventListener('click',()=>send(b.textContent)));
+}
+function ensureGreeting(){ if(!chatReady){ chatReady = true; addWelcome(); } }
+
+function buildReply(q){
+  const t = q.toLowerCase();
+  if(ctxFile){
+    const f = ctxFile;
+    return {
+      html:'<span class="btitle">Linked file — '+esc(f.name)+'</span><ul>'+
+        '<li>Status: '+f.statusTxt+' · Size: '+f.size+' · Owner: '+f.owner+'</li>'+
+        '<li>'+esc(f.sum)+'</li>'+
+        '<li>For anything beyond this indexed summary, request a full-document extraction from the Library view.</li></ul>'+
+        '<div class="warnline">⚕ Decision support only — verify against the source document before clinical action.</div>',
+      plain:'Linked file — '+f.name+'. Status: '+f.statusTxt+', size '+f.size+', owner '+f.owner+'. '+f.sum+' For anything beyond this indexed summary, request a full-document extraction. Decision support only.',
+      cites:[f.name]
+    };
+  }
+  if(/metformin|renal dos|egfr/.test(t)){
+    return {
+      html:'<span class="btitle">Metformin — renal dosing (indexed protocol)</span><ul>'+
+        '<li>eGFR ≥ 45 — standard dose; review renal function every 3–6 months.</li>'+
+        '<li>eGFR 30–45 — do not initiate; if established, reassess risk/benefit and consider dose reduction.</li>'+
+        '<li>eGFR &lt; 30 — contraindicated.</li>'+
+        '<li>Hold on the day of iodinated contrast; re-check creatinine at 48 h before restarting.</li></ul>',
+      plain:'Metformin renal dosing: eGFR 45 or above — standard dose with 3–6 monthly renal review. eGFR 30 to 45 — do not initiate; reassess if established. Below 30 — contraindicated. Hold for iodinated contrast and re-check creatinine at 48 hours.',
+      cites:['Metformin_Protocol.pdf']
+    };
+  }
+  if(/potassium|k\+|critical/.test(t)){
+    return {
+      html:'<span class="btitle">Potassium — critical pathway</span><ul>'+
+        '<li>K⁺ ≥ 6.0 mmol/L or any ECG changes → immediate escalation to the on-call physician.</li>'+
+        '<li>If the patient is stable, repeat the sample to exclude haemolysis before treatment.</li>'+
+        '<li>Document time of notification and the name of the receiving clinician.</li></ul>'+
+        '<div class="warnline">⚕ Two critical K⁺ flags are open in today’s review queue.</div>',
+      plain:'Potassium critical pathway: K+ 6.0 or above, or any ECG changes, means immediate escalation to the on-call physician. If stable, repeat the sample to exclude haemolysis before treating. Document notification time and receiving clinician. Two critical flags are open today.',
+      cites:['Potassium_Critical_Flow.pdf','CBC_Panel_Apr.pdf']
+    };
+  }
+  if(/chest pain|acs|troponin|triage/.test(t)){
+    return {
+      html:'<span class="btitle">Red flag — chest pain</span><ul>'+
+        '<li>This presentation warrants an ECG within 10 minutes and serial troponin per the ACS pathway.</li>'+
+        '<li>I can retrieve the full protocol, but please escalate according to local triage policy first.</li></ul>'+
+        '<div class="warnline">⚕ Potential emergency — this tool does not replace acute assessment.</div>',
+      plain:'Red flag chest pain: ECG within 10 minutes and serial troponin per ACS pathway. I can retrieve the full protocol, but please escalate per local triage policy first. This tool does not replace acute assessment.',
+      cites:[]
+    };
+  }
+  if(/summar|labs|patient|4821|panel/.test(t)){
+    return {
+      html:'<span class="btitle">Latest labs — patient #4821</span><ul>'+
+        '<li>Hgb 11.2 g/dL — mildly low, stable versus the January panel.</li>'+
+        '<li>K⁺ 4.1 mmol/L — within reference range.</li>'+
+        '<li>LDL 2.9 mmol/L — above the 1.8 target for the diabetic cohort; therapy review suggested.</li></ul>',
+      plain:'Latest labs for patient 4821: haemoglobin 11.2, mildly low but stable. Potassium 4.1, normal. LDL 2.9, above the 1.8 diabetic cohort target — therapy review suggested.',
+      cites:['CBC_Panel_Apr.pdf','Lipid_Panel_Q3.pdf']
+    };
+  }
+  if(/^(hi|hello|hey|good (morning|afternoon|evening))/.test(t)){
+    return {
+      html:'Hello! Try asking me to <b>summarise recent labs</b>, check <b>metformin renal dosing</b>, or open the <b>potassium critical pathway</b>. You can also link any file from the Library using <i>Ask AI about this file</i>.',
+      plain:'Hello! Try asking me to summarise recent labs, check metformin renal dosing, or open the potassium critical pathway.',
+      cites:[]
+    };
+  }
+  return {
+    html:'I searched the indexed library but couldn’t find a confident match for that query. Try:<ul>'+
+      '<li>“Summarise the latest labs for patient #4821”</li>'+
+      '<li>“Check metformin renal dosing”</li>'+
+      '<li>“Walk me through the potassium critical pathway”</li></ul>'+
+      'You can also link a specific record via the 📎 context bar.',
+    plain:'I searched the indexed library but could not find a confident match. Try one of the suggested queries, or link a specific record via the context bar.',
+    cites:[]
+  };
+}
+
+let busy = false;
+function send(text){
+  const q = (text||'').trim();
+  if(!q || busy) return;
+  ensureGreeting();
+  busy = true;
+  addUser(q);
+  chatInput.value=''; autoGrow();
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+    const r = buildReply(q);
+    addAIStream(r.html, r.plain, r.cites);
+    busy = false;
+  }, REDUCED?80:700);
+}
+$('#sendBtn').addEventListener('click',()=>send(chatInput.value));
+chatInput.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(chatInput.value); }
+});
+function autoGrow(){ chatInput.style.height='auto'; chatInput.style.height = Math.min(chatInput.scrollHeight,130)+'px'; }
+chatInput.addEventListener('input', autoGrow);
+
+$('#newChatBtn').addEventListener('click',()=>{
+  chatMsgs.innerHTML=''; chatReady=false; ensureGreeting();
+  toast('New conversation started — context cleared.');
+});
+
+/* Context linking */
+function linkContext(f){
+  ctxFile = f;
+  $('#ctxName').textContent = f.name;
+  $('#chatCtx').classList.add('on');
+  ensureGreeting();
+  addCtxPill(f.name);
+  toast('“'+f.name+'” linked to the assistant context.');
+}
+$('#ctxRemove').addEventListener('click',()=>{
+  ctxFile = null; $('#chatCtx').classList.remove('on');
+  toast('Context file unlinked.');
+});
+
+/* ---------------- INIT ---------------- */
+show('dashboard');
+})();
+</script>
+</body>
+</html>
